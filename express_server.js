@@ -39,13 +39,39 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: "http://www.lighthouselabs.ca" /* What goes here? */ };
+  const templateVars = { shortURL: req.params.shortURL, longURL: req.body.longURL /* What goes here? */ };
   res.render("urls_show", templateVars);
 });
 
 app.post("/urls", (req, res) => {
   console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  const { longURL } = req.body;
+  const shortURL = generateRandomString();
+  const userID = req.session.user_id;
+  urlDatabase[shortURL] = {
+    longURL,
+    userID,
+  }
+  res.redirect(`/urls/${shortURL}`);
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const { shortURL } = req.params;
+  const longURL = urlDatabase[shortURL];
+  res.redirect(longURL);
+});
+
+// when the delete button on the show /urls page is pressed
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const { shortURL } = req.params;
+  const userID = req.session.user_id;
+  if (userID) {
+    delete urlDatabase[shortURL];
+  } else {
+    res.send("Unauthorized request");
+  }
+  res.redirect("/urls");
 });
 
 //
