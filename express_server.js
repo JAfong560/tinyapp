@@ -98,7 +98,38 @@ app.post("/login", function (req, res) {
 app.post("/logout", (req, res) => {
   req.session=null;
   res.redirect("/login");
+});
+
+app.get("/register", (req, res) => {
+  const id = req.session.user_id;
+  const user = id ? users[1] : null; // check if the cookie already exists with a legit id 
+  let templateVars = { user };
+  res.render("registration", templateVars);
 })
+
+app.post("/register", function (req, res) {
+  const { email, password } = req.body;
+  //if email or password input is blank throw an error
+  if (email === "" || password === "") {
+    res.status(400).send("An email or password needs to be entered.")
+    return
+    //if email is already in use throw an error 
+  } else if (getUserByEmail(email, users)) {
+    res.status(400).send("Email is already in use.")
+    return
+  } else {
+    //if the email is not in use, create a new user for TinyApp
+    const userID = generateRandomString();
+    users[userID] = {
+      id: userID,
+      email: email,
+      password: bcrypt.hashSync(password, 8)
+    }
+    req.session.user_id = userID;
+    // res.cookie("user_id", userID);
+    res.redirect("/urls");
+  }
+});
 
 // DATABASE FOR THE USERS
 const users = {
