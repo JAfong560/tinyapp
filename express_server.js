@@ -1,17 +1,26 @@
+//import external modules
 const express = require("express");
+const ejs = require('ejs')
 const app = express();
 const PORT = 8080; // default port 8080
+const bodyParser = require("body-parser");
+// const cookieSession = require("cookie-session");
+const cookieParser = require('cookie-parser');
 
-app.set("view engine", "ejs"); //Declare EJS as templating engine
-app.set("views", "./views")
+//initialize middlewares
+
+/* app.use(cookieSession({
+  name: 'session',
+  keys:["lighthouse"],
+})); */
+
+app.use(bodyParser.urlencoded({ extended: true })); // Enables body-parse
+app.set('view engine', 'ejs'); // Enables EJS for rendering the pages
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.example.com", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
 };
-
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -25,10 +34,6 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
-
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
@@ -39,7 +44,7 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.body.longURL /* What goes here? */ };
+  const templateVars = { shortURL: req.params.shortURL, longURL: req.body.longURL, user: req.cookies["user"] /* What goes here? */ };
   res.render("urls_show", templateVars);
 });
 
@@ -74,9 +79,23 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
+// when the edit buton on the show URL page is pressed
+app.put("/urls/:shortURL/edit", (req, res) => {
+  const userID = req.cookies["user"];
+  const shortURL = req.params.shortURL;
+  let usersObj = isUsersLink(urlDatabase, userID);
+  //check if shortURL exists for current user:
+  if (usersObj[shortURL]) {
+    urlDatabase[shortURL].longURL = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    res.render("error", {ErrorStatus: 403, ErrorMessage: "You do not have access to edit this link."});
+  }
+});
+
 //login functionality
 app.get("/login", (req, res) => {
-  const id = req.session.user_id;
+  const id = "user";
   const user = id ? users[id] : null;
   let templateVars = { user };
   res.render("login", templateVars);
@@ -88,7 +107,7 @@ app.post("/login", function (req, res) {
   const userID = getUserByEmail(loginemail, users); //returns user id
   const passwordCheck = checkPassword(loginemail, loginpassword, users);
   if (userID && passwordCheck) {
-    req.session.user_id = userID;
+    req.cookies["user"] = userID;
     res.redirect("/urls");
   } else {
     res.send("Invalid email or password combination.");
@@ -155,7 +174,14 @@ const generateRandomString = function () {
     }
     return result;
   }
-
+//Match the given e-mail with the records
+const getUserByEmail = function (email, database) {
+  for (let user in database) {
+    if (database[user].email === email) {
+      return database[user].id;
+    }
+  }
+}
   const isUsersLink = function (object, id) {
     let usersObject = {};
     for (let key in object) {
