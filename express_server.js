@@ -101,8 +101,8 @@ app.post("/logout", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  const id = req.session.user_id;
-  const user = id ? users[1] : null; // check if the cookie already exists with a legit id 
+  const id = req.params.user_id;
+  const user = id ? users[id] : null; // check if the cookie already exists with a legit id 
   let templateVars = { user };
   res.render("registration", templateVars);
 })
@@ -154,4 +154,24 @@ const generateRandomString = function () {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
+  }
+
+  const isUsersLink = function (object, id) {
+    let usersObject = {};
+    for (let key in object) {
+      if (object[key].userID === id) {
+        usersObject[key] = object[key];
+      }
+    }
+    return usersObject;
+  }
+  
+  //Validate login by checking email and password combination of a user
+  const checkPassword = function (loginemail, loginpassword, objectDb) {
+    for (let user in objectDb) {
+      if (objectDb[user].email === loginemail && bcrypt.compareSync(loginpassword, objectDb[user].password)) {
+        return true;
+      }
+    }
+    return false;
   }
