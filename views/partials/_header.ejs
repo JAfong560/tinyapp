@@ -8,6 +8,24 @@
         <div class="navbar-nav">
           <a class="nav-item nav-link" href="/urls">My URLs</a>
           <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+
+          <!--Register/ Login/ Logout-->
+          <div class="form-inline" style="margin-left: 600px"> 
+          
+            <form class="form-inline" method="POST" action="/logout">
+              <a class="nav-item nav-link inline" style="padding: 20px">Logged in as </a>
+              <button type="submit" class="btn btn-outline-secondary">Logout</button>
+            </form>
+          
+            <div style="margin-left: 200px">
+                <form class="form-inline" method="POST" action="/loginbtn">
+                  
+                  <a class="nav-item nav-link" style="padding: 20px;" href="/login">Login</a>
+              </form>
+            </div>
+          
+          </div>
+
         </div>
       </div>
     </nav>

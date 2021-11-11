@@ -74,6 +74,46 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 });
 
+//login functionality
+app.get("/login", (req, res) => {
+  const id = req.session.user_id;
+  const user = id ? users[id] : null;
+  let templateVars = { user };
+  res.render("login", templateVars);
+})
+
+app.post("/login", function (req, res) {
+  const loginemail = req.body.loginemail; // get the entered email
+  const loginpassword = req.body.loginpassword; //get the entered password
+  const userID = getUserByEmail(loginemail, users); //returns user id
+  const passwordCheck = checkPassword(loginemail, loginpassword, users);
+  if (userID && passwordCheck) {
+    req.session.user_id = userID;
+    res.redirect("/urls");
+  } else {
+    res.send("Invalid email or password combination.");
+  }
+});
+
+app.post("/logout", (req, res) => {
+  req.session=null;
+  res.redirect("/login");
+})
+
+// DATABASE FOR THE USERS
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+}
+
 //
 const generateRandomString = function () {
     let result = '';
