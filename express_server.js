@@ -8,6 +8,9 @@ const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
 
 //initialize middlewares
+const bcrypt = require('bcryptjs');
+const password = "purple-monkey-dinosaur"; // found in the req.params object
+const hashedPassword = bcrypt.hashSync(password, 10);
 
 /* app.use(cookieSession({
   name: 'session',
