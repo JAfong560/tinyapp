@@ -4,18 +4,18 @@ const ejs = require('ejs')
 const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
-// const cookieSession = require("cookie-session");
-const cookieParser = require('cookie-parser');
+const cookieSession = require("cookie-session");
+//const cookieParser = require('cookie-parser');
 
 //initialize middlewares
 const bcrypt = require('bcryptjs');
 const password = "purple-monkey-dinosaur"; // found in the req.params object
 const hashedPassword = bcrypt.hashSync(password, 10);
 
-/* app.use(cookieSession({
+app.use(cookieSession({
   name: 'session',
   keys:["lighthouse"],
-})); */
+}));
 
 app.use(bodyParser.urlencoded({ extended: true })); // Enables body-parse
 app.set('view engine', 'ejs'); // Enables EJS for rendering the pages
@@ -26,7 +26,7 @@ const urlDatabase = {
 };
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/register");
 });
 
 app.listen(PORT, () => {
@@ -37,23 +37,45 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// Urls page that shows user's generated short and long URLs:
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
-  res.render("urls_index", templateVars);
+  const id = req.session.user_id;
+  const user = id ? users[id] : null; // check if the cookie already exists with a legit id 
+  if (user) {
+    let templateVars = { "urls": isUsersLink(urlDatabase, id), user };
+    res.render("urls_index", templateVars);
+  } else {
+    res.status(403).send("Please login or register first.")
+  }
 });
 
+
+// Generate a new short URL from a long URL
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const id = req.session.user_id;
+  const user = id ? users[id] : null; // check if the cookie already exists with a legit id 
+  if (user) {
+    let templateVars = { user };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login")
+  }
 });
 
+// Short url page where you can edit long URLs
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.body.longURL, user: req.cookies["user"] /* What goes here? */ };
-  res.render("urls_show", templateVars);
+  const { shortURL } = req.params;
+  const id = req.session.user_id;
+  const user = id ? users[id] : null; // check if the cookie already exists with a legit id 
+  if (user && urlDatabase[shortURL]) {
+    let templateVars = { shortURL, longURL: urlDatabase[shortURL].longURL, user };
+    res.render("urls_show", templateVars);
+  } else {
+    res.send("Requested page was not found")
+  }
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
   const { longURL } = req.body;
   const shortURL = generateRandomString();
   const userID = req.session.user_id;
@@ -66,8 +88,8 @@ app.post("/urls", (req, res) => {
 
 app.get("/u/:shortURL", (req, res) => {
   const { shortURL } = req.params;
-  const longURL = urlDatabase[shortURL];
-  res.redirect(longURL);
+  const longURL = urlDatabase[shortURL].longURL;
+  res.redirect(`http://${longURL}`);
 });
 
 // when the delete button on the show /urls page is pressed
@@ -84,7 +106,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // when the edit buton on the show URL page is pressed
 app.put("/urls/:shortURL/edit", (req, res) => {
-  const userID = req.cookies["user"];
+  const userID = req.session.user_id
   const shortURL = req.params.shortURL;
   let usersObj = isUsersLink(urlDatabase, userID);
   //check if shortURL exists for current user:
@@ -96,9 +118,8 @@ app.put("/urls/:shortURL/edit", (req, res) => {
   }
 });
 
-//login functionality
 app.get("/login", (req, res) => {
-  const id = "user";
+  const id = req.session.user_id;
   const user = id ? users[id] : null;
   let templateVars = { user };
   res.render("login", templateVars);
@@ -110,7 +131,7 @@ app.post("/login", function (req, res) {
   const userID = getUserByEmail(loginemail, users); //returns user id
   const passwordCheck = checkPassword(loginemail, loginpassword, users);
   if (userID && passwordCheck) {
-    req.cookies["user"] = userID;
+    req.session.user_id = userID;
     res.redirect("/urls");
   } else {
     res.send("Invalid email or password combination.");
@@ -120,10 +141,10 @@ app.post("/login", function (req, res) {
 app.post("/logout", (req, res) => {
   req.session=null;
   res.redirect("/login");
-});
+})
 
 app.get("/register", (req, res) => {
-  const id = req.params.user_id;
+  const id = req.session.user_id;
   const user = id ? users[id] : null; // check if the cookie already exists with a legit id 
   let templateVars = { user };
   res.render("registration", templateVars);
@@ -167,16 +188,16 @@ const users = {
   }
 }
 
-//
 const generateRandomString = function () {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    for (var i = 0; i < 6; i++) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    return result;
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const charactersLength = characters.length;
+  for (var i = 0; i < 6; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
+  return result;
+}
+
 //Match the given e-mail with the records
 const getUserByEmail = function (email, database) {
   for (let user in database) {
@@ -185,22 +206,23 @@ const getUserByEmail = function (email, database) {
     }
   }
 }
-  const isUsersLink = function (object, id) {
-    let usersObject = {};
-    for (let key in object) {
-      if (object[key].userID === id) {
-        usersObject[key] = object[key];
-      }
+
+const isUsersLink = function (object, id) {
+  let usersObject = {};
+  for (let key in object) {
+    if (object[key].userID === id) {
+      usersObject[key] = object[key];
     }
-    return usersObject;
   }
-  
-  //Validate login by checking email and password combination of a user
-  const checkPassword = function (loginemail, loginpassword, objectDb) {
-    for (let user in objectDb) {
-      if (objectDb[user].email === loginemail && bcrypt.compareSync(loginpassword, objectDb[user].password)) {
-        return true;
-      }
+  return usersObject;
+}
+
+//Validate login by checking email and password combination of a user
+const checkPassword = function (loginemail, loginpassword, objectDb) {
+  for (let user in objectDb) {
+    if (objectDb[user].email === loginemail && bcrypt.compareSync(loginpassword, objectDb[user].password)) {
+      return true;
     }
-    return false;
   }
+  return false;
+}
