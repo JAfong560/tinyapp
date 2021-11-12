@@ -7,11 +7,13 @@ const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 //const cookieParser = require('cookie-parser');
 
-//initialize middlewares
-const bcrypt = require('bcryptjs');
-const password = "purple-monkey-dinosaur"; // found in the req.params object
-const hashedPassword = bcrypt.hashSync(password, 10);
 
+const bcrypt = require('bcryptjs');
+const { generateRandomString, getUserByEmail } = require("./helpers");
+// const password = "purple-monkey-dinosaur"; // found in the req.params object
+// const hashedPassword = bcrypt.hashSync(password, 10);
+
+//initialize middlewares
 app.use(cookieSession({
   name: 'session',
   keys:["lighthouse"],
@@ -188,7 +190,7 @@ const users = {
   }
 }
 
-const generateRandomString = function () {
+/* const generateRandomString = function () {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
@@ -196,7 +198,7 @@ const generateRandomString = function () {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
   }
   return result;
-}
+} 
 
 //Match the given e-mail with the records
 const getUserByEmail = function (email, database) {
@@ -205,7 +207,7 @@ const getUserByEmail = function (email, database) {
       return database[user].id;
     }
   }
-}
+} */
 
 const isUsersLink = function (object, id) {
   let usersObject = {};
