@@ -14,16 +14,16 @@
 
 <body>
 
-    <%- include('partials/_header') %>
+  <%- include('partials/_header') %>
 
   <main style="padding: 100px">
-    <h2 style="margin-bottom: 20px">Sign up to <b>tiny</b>App — a mighty URL shortener for your web links.</h2>
-    <h5 style="margin-bottom: 2em">Please enter your<b> email</b> and set a <b>password</b> to create an account</h5>
+    <h2 style="margin-bottom: 20px">Sign up to TinyApp — a mighty URL shortener for your web links.</h2>
+    <h5 style="margin-bottom: 2em">Please enter your<b> email</b> and a <b>password</b> to create an account</h5>
     <form action="/register" method="POST">
       <div class="form-group mb-2">
-        <label for="register" style="margin-top: 1em;font-size: 20px"><b>user</b>Email:</label>
+        <label for="register" style="margin-top: 1em;font-size: 20px">User Email:</label>
         <input class="form-control" type="email" name="email" style="width: 300px; margin-bottom: 1em" placeholder="Enter your email address here">
-        <label for="register" style="font-size: 20px"><b>pass</b>Word:</label>
+        <label for="register" style="font-size: 20px">Password:</label>
         <input class="form-control" type="password" name="password" style="width: 300px" placeholder="Enter your password here">
         <button type="submit" style="margin-top: 2em; width: 7em" class="btn btn-primary">Submit</button>
       </div>

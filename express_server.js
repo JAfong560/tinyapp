@@ -23,8 +23,8 @@ app.use(bodyParser.urlencoded({ extended: true })); // Enables body-parse
 app.set('view engine', 'ejs'); // Enables EJS for rendering the pages
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.example.com", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
+  b6UTxQ: { longURL: "https://www.example.com", shortURL: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", shortURL: "aJ48lW" },
 };
 
 app.get("/", (req, res) => {
@@ -82,8 +82,9 @@ app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   const userID = req.session.user_id;
   urlDatabase[shortURL] = {
-    longURL,
     userID,
+    longURL,
+    shortURL,
   }
   res.redirect(`/urls/${shortURL}`);
 });
@@ -107,7 +108,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 // when the edit buton on the show URL page is pressed
-app.put("/urls/:shortURL/edit", (req, res) => {
+app.post("/urls/:shortURL/edit", (req, res) => {
   const userID = req.session.user_id
   const shortURL = req.params.shortURL;
   let usersObj = isUsersLink(urlDatabase, userID);
